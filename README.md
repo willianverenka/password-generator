@@ -16,7 +16,7 @@ If it doesnt't work, you can follow the steps from [Microsoft](https://dotnet.mi
 
 ### Installing
 1. Clone the repository to your local machine: `git clone https://github.com/willianverenka/password-generator.git`
-2. Navigate to the project directory: `cd pasgen`
+2. Navigate to the project directory: `cd password-generator`, then `cd pasgen`
 
 ### Usage
 1. Run the program: `dotnet run`
