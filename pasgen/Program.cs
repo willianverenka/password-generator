@@ -12,6 +12,7 @@ namespace pasgen
         [STAThread]
         static void Main()
         {
+            Console.Clear();
             Console.WriteLine("Welcome to the password generator!\n");
             int intInput;
             while (true)
