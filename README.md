@@ -6,13 +6,12 @@ The algorithm employs the .NET System.Security.Cryptography namespace to produce
 The feedback provided by the application is the Zxcvbn password strength estimation library, you can check the used C# implementation [here.](https://github.com/trichards57/zxcvbn-cs)
 
 ## Getting started
-You can build it yourself from the source code using Visual Studio or another IDE that supports .NET, or you can download the executable from releases.
 
 ### Prerequisistes
 
 Make sure you have .NET SDK 7.0 or over installed.
 You can check it opening the cmd and inserting **dotnet --info**.
-If it doesnt't work, you can follow the steps from [Microsoft](https://dotnet.microsoft.com/download) to download it. `
+If it doesnt't work, you can follow the steps from [Microsoft](https://dotnet.microsoft.com/download) to download it.
 
 ### Installing
 1. Clone the repository to your local machine: `git clone https://github.com/willianverenka/password-generator.git`
