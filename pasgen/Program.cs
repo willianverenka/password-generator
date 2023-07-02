@@ -1,158 +1,132 @@
 ﻿using Zxcvbn;
+using System.Diagnostics;
 
 namespace pasgen
 {
     class Program
     {
-        public class Characters
-        {
-            public static string disabled_special_characters = "QWERTYUIOPASDFGHJKLXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890";
-            public static string enabled_special_characters = "QWERTYUIOPASDFGHJKLXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890 !#$%&*+-./?@\\^_~";
-        }
         [STAThread]
         static void Main()
         {
+            bool IsWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+            Console.Clear();
             Console.WriteLine("Welcome to the password generator!\n");
             int intInput;
-            while (true)
+            while(true)
             {
-                Console.WriteLine("1. Generate new password");
-                Console.WriteLine("2. Exit");
+                var mainMenu = new Menu(new string[] {"Generate new password", "Visit Github repository", "Exit"}, true);
+                mainMenu.Display();
                 var input = Console.ReadLine();
-                if (!ValidInput(input, out intInput) || intInput > 2 || intInput < 1)
+                while(!Input.IsValidInteger(input, out intInput) || intInput > 3 || intInput < 1)
                 {
                     Console.Clear();
-                    Console.WriteLine($"{input} is not a valid input");
+                    mainMenu.Display();
+                    Console.WriteLine($"{input} is not a valid input\n");
+                    input = Console.ReadLine();
                 }
-                else if (intInput == 1)
+                if(intInput == 1)
                 {
                     Console.Clear();
-                    Console.WriteLine("Which length would you like?");
-                    Console.WriteLine("You can generate a password from 8 up to 24 characters");
-                    Console.WriteLine("PS: 14-18 are recommended.");
+                    var userPreferenceMenu = new Menu(new string[]
+                    {
+                        "Which length would you like?",
+                        "You can generate a password from 8 up to 24 characters",
+                        "TIP: Following BitWarden password strength chart, it should have at least 14 characters."
+                    }, false);
+                    userPreferenceMenu.Display();
                     var pasInput = Console.ReadLine();
                     int lengthInput;
-                    while (!ValidInput(pasInput, out lengthInput) || lengthInput < 8 || lengthInput > 24)
+                    while(!Input.IsValidInteger(pasInput, out lengthInput) || lengthInput < 8 || lengthInput > 24)
                     {
                         Console.Clear();
-                        Console.WriteLine("Which length would you like?");
-                        Console.WriteLine("You can generate a password from 8 up to 24 characters");
-                        Console.WriteLine("PS: 14-18 are recommended.");
+                        userPreferenceMenu.Display();
                         Console.WriteLine($"{pasInput} isn't a valid input.");
                         pasInput = Console.ReadLine();
                     }
-                    Console.WriteLine("Would you like special characters? !@#$%^&* among others (Y/N)");
+                    var specialCharactersMenu = new Menu("Do you want to include special characters such as !@#$%^&* in your password? (Y/N)");
+                    specialCharactersMenu.Display();    
                     var ynInput = Console.ReadLine();
-                    while (!ValidAssertiveInput(ynInput))
+                    while(!Input.IsYesOrNo(ynInput))
                     {
+                        specialCharactersMenu.Display();
                         Console.WriteLine($"{ynInput} isn't a valid input.");
                         ynInput = Console.ReadLine();
                     }
                     Console.Clear();
-                    Password generatedPassword = new Password(lengthInput, AssertiveInput(ynInput));
-                    string password = generatedPassword.GetPassword();
+                    Password generatedPassword = new Password(lengthInput, Input.IsYes(ynInput));
+                    string password = generatedPassword.FinalPassword;
                     var evaluatedPassword = Core.EvaluatePassword(password);
-                    Console.WriteLine("Your generated password is:\n");
-                    Console.WriteLine($"{password}\n");
-                    Console.WriteLine($"Your password is {LudicFeedback(evaluatedPassword.Score)}.");
-                    Console.WriteLine($"It could be cracked after 10^{(int)evaluatedPassword.GuessesLog10} guesses.\n");
-                    Console.WriteLine("Would you like to copy it to the clipboard? (Y/N)");
-                    ynInput = Console.ReadLine();
-                    while (!ValidAssertiveInput(ynInput))
+                    var passwordRevelationMenu = new Menu(new string[] {
+                        "Your generated password is:",
+                        $"{password}",
+                        $"Your password is {Feedback.Description(evaluatedPassword.Score)}.",
+                        $"It could be cracked after 10^{(int)evaluatedPassword.GuessesLog10} guesses."
+                    }, false);
+                    if(IsWindows)
                     {
-                        Console.WriteLine($"{ynInput} isn't a valid input.");
+                        passwordRevelationMenu.Display();
+                        var clipboardMenu = new Menu("Would you like to copy it to the clipboard? (Y/N)");
+                        clipboardMenu.Display();
                         ynInput = Console.ReadLine();
+                        while(!Input.IsYesOrNo(ynInput))
+                        {
+                            clipboardMenu.Display();
+                            Console.WriteLine($"{ynInput} isn't a valid input.");
+                            ynInput = Console.ReadLine();
+                        }
+                        if(Input.IsYes(ynInput))
+                        {
+                            Console.Clear();
+                            Clipboard.SetText(password);
+                            Console.WriteLine("Password copied to the clipboard.\n");
+                        }
                     }
-                    if (AssertiveInput(ynInput))
-                    {
-                        Clipboard.SetText(password);
-                        Console.WriteLine("Password copied to the clipboard.\n");
-                    }
-                    Console.WriteLine("Press any key to go back to the menu.");
+                    Console.WriteLine("Press any key to go back to the main menu.");
                     Console.ReadKey();
                     Console.Clear();
                 }
+                else if(intInput == 2)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo
+                        {
+                            FileName = "https://github.com/willianverenka/password-generator",
+                            UseShellExecute = true
+                        };
+                        Process.Start(psi);
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.Clear();
+                        Console.WriteLine($"An error occurred while opening the web page: {ex.Message}");
+                        Console.WriteLine($"You can manually search for willianverenka/password-generator if you wish.\n");
+                        if(IsWindows)
+                        {
+                            var clipboardMenu = new Menu("Would you like to copy the URL to the clipboard? (Y/N)");
+                            clipboardMenu.Display();
+                            var errorInput = Console.ReadLine();
+                            while(!Input.IsYesOrNo(errorInput))
+                            {
+                                clipboardMenu.Display();
+                                Console.WriteLine($"{errorInput} isn't a valid input.");
+                            }
+                            if(Input.IsYes(input))
+                            {
+                                Clipboard.SetText("https://github.com/willianverenka/password-generator");
+                                Console.WriteLine("URL copied to the clipboard.");
+                            }
+                        }
+                        Console.WriteLine("Press any key to go back to the main menu.");
+                        Console.ReadKey();
+                    }
+                    Console.Clear();
+                }
                 else
                 {
                     break;
                 }
             }
         }
-        public class Password
-        {
-            private int length;
-            private bool special_characters;
-            private string finalPassword;
-            private string desiredSet;
-            public string GetPassword()
-            {
-                return finalPassword;
-            }
-            private void Generate()
-            {
-                string FinalPassword = "";
-                for (int i = 0; i < length; i++)
-                {
-                    int random = RandomNumber(desiredSet);
-                    char singleCharacter = desiredSet[random];
-                    FinalPassword += singleCharacter.ToString();
-                }
-                finalPassword = FinalPassword;
-            }
-            public Password(int length, bool special_characters)
-            {
-                this.length = length;
-                this.special_characters = special_characters;
-                if (!special_characters)
-                {
-                    desiredSet = Characters.disabled_special_characters;
-                }
-                else
-                {
-                    desiredSet = Characters.enabled_special_characters;
-                }
-                Generate();
-            }
-        }
-        public static string LudicFeedback(int score)
-        {
-            string feedbackString = "";
-            switch (score)
-            {
-                case 0:
-                    feedbackString = "very weak";
-                    break;
-                case 1:
-                    feedbackString = "weak";
-                    break;
-                case 2:
-                    feedbackString = "reasonable";
-                    break;
-                case 3:
-                    feedbackString = "strong";
-                    break;
-                case 4:
-                    feedbackString = "very strong";
-                    break;
-            }
-            return feedbackString;
-        }
-        public static int RandomNumber(string characterSet)
-        {
-            return System.Security.Cryptography.RandomNumberGenerator.GetInt32(0, characterSet.Length);
-        }
-        public static bool AssertiveInput(string input)
-        {
-            return input.Equals("Y", StringComparison.OrdinalIgnoreCase);
-        }
-        public static bool ValidAssertiveInput(string input)
-        {
-            return input.Equals("Y", StringComparison.OrdinalIgnoreCase) || input.Equals("N", StringComparison.OrdinalIgnoreCase);
-        }
-        public static bool ValidInput(string input, out int intInput)
-        {
-            return int.TryParse(input, out intInput);
-        }
-
     }
 }
